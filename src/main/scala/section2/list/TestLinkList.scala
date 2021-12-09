@@ -8,7 +8,7 @@ object TestLinkList extends App {
   Random.setSeed(0L)
 
   val aLinkedList: LinkList[Int] = LinkList(
-    (1 to 10000).map(i=>Random.between(-1000,1000)):_*
+    (0 to 100).map(i=>Random.between(0,100)):_*
   )
   val appendItem = aLinkedList :+ 5
 

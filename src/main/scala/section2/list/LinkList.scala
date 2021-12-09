@@ -139,11 +139,11 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
     }
 
     @tailrec
-    def insertInSorted(toInsert: T, sorted: LinkList[T], acc: LinkList[T] = EmptyLink): LinkList[T] = {
-      if (sorted.isEmpty) acc :+ toInsert
+    def insertInSorted(toInsert: LinkList[T], sorted: LinkList[T], acc: LinkList[T] = EmptyLink): LinkList[T] = {
+      if (sorted.isEmpty) acc ++ toInsert
       else {
-        if (comparator(toInsert, sorted.head) <= 0) {
-          acc ++ sorted.prepend(toInsert)
+        if (comparator(toInsert.head, sorted.head) <= 0) {
+          acc ++ (toInsert ++ sorted)
         } else {
           val newSorted = sorted.tail
           val newAcc = acc :+ sorted.head
@@ -163,9 +163,8 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
           left.head
         }
         val (l, c, r) = partition(pivot, left ++ right)
-        val newSorted = insertInSorted(c.head, sorted)
-        val newLeft = l ++ c.tail
-        helper(newLeft, r, newSorted)
+        val newSorted = insertInSorted(c, sorted)
+        helper(l, r, newSorted)
       }
     }
 
