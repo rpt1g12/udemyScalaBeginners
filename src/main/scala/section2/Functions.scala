@@ -15,7 +15,7 @@ object Functions extends App {
   def repeatString(aString: String, n: Int): String = {
     @tailrec
     def helper(output: String, aString: String, n: Int): String = {
-      if (aString.isBlank) {
+      if (aString.isEmpty) {
         ""
       } else {
         if (n == 1) {
