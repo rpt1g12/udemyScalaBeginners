@@ -25,11 +25,15 @@ trait LinkList[+T] {
 
   def sort(comparator: (T, T) => Int): LinkList[T]
 
+  def fold[A >: T](zero: A)(f: (A, A) => A): A
+
+  def foldLeft[B](zero: B)(f: (B, T) => B): B
+
   def forEach(f: T => Unit): Unit
 
-  def map[A >: T](mapFunction: T => A): LinkList[A]
+  def map[A](mapFunction: T => A): LinkList[A]
 
-  def flatMap[A >: T](flatMapFunction: T => LinkList[A]): LinkList[A]
+  def flatMap[A](flatMapFunction: T => LinkList[A]): LinkList[A]
 
   def filter(predicate: T => Boolean): LinkList[T]
 
@@ -53,7 +57,8 @@ object LinkList {
 
     helper(EmptyLink, elements)
   }
-  def singleton[T](element:T):LinkList[T] = Link(element,EmptyLink)
+
+  def singleton[T](element: T): LinkList[T] = Link(element, EmptyLink)
 }
 
 class EmptyHeadException extends IllegalArgumentException("An Empty list has no head")
@@ -75,6 +80,10 @@ object EmptyLink extends LinkList[Nothing] {
   override def prepend[A >: Nothing](element: A): LinkList[A] = LinkList.singleton(element)
 
   override def reverse: LinkList[Nothing] = EmptyLink
+
+  override def fold[A >: Nothing](zero: A)(f: (A, A) => A): A = zero
+
+  override def foldLeft[B](zero: B)(f: (B, Nothing) => B): B = zero
 
   override def sort(comparator: (Nothing, Nothing) => Int): LinkList[Nothing] = EmptyLink
 
@@ -112,6 +121,26 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
   override def :+[A >: T](element: A): LinkList[A] = Link[A](head, tail :+ element)
 
   override def prepend[A >: T](element: A): LinkList[A] = Link[A](element, Link(head, tail))
+
+  override def fold[A >: T](zero: A)(f: (A, A) => A): A = {
+    foldLeft(zero)(f)
+  }
+
+  override def foldLeft[B](zero: B)(f: (B, T) => B): B = {
+    if (tail.isEmpty) {
+      f(zero, head)
+    } else {
+      @tailrec
+      def helper(result: B = zero, remainder: LinkList[T] = this): B = {
+        if (remainder.isEmpty) {
+          result
+        } else {
+          helper(f(result, remainder.head), remainder.tail)
+        }
+      }
+      helper()
+    }
+  }
 
   override def reverse: LinkList[T] = {
     if (tail.isEmpty) {
@@ -153,26 +182,19 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
     }
 
     @tailrec
-    def helper(left: LinkList[T] = this, right: LinkList[T] = EmptyLink, sorted: LinkList[T] = EmptyLink): (LinkList[T], LinkList[T], LinkList[T]) = {
-      if (left.isEmpty && right.isEmpty) {
-        (left, sorted, right)
+    def helper(remaining: LinkList[T] = this, sorted: LinkList[T] = EmptyLink): LinkList[T] = {
+      if (remaining.isEmpty) {
+        sorted
       } else {
-        val pivot = if (left.isEmpty) {
-          right.head
-        } else {
-          left.head
-        }
-        val (l, c, r) = partition(pivot, left ++ right)
-        val newSorted = insertInSorted(c, sorted)
-        helper(l, r, newSorted)
+        val (l, c, r) = partition(remaining.head, remaining)
+        helper(l ++ r, insertInSorted(c, sorted))
       }
     }
 
     if (tail.isEmpty) {
       this
     } else {
-      val (left, sorted, right) = helper()
-      sorted
+      helper()
     }
   }
 
@@ -195,7 +217,7 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
     tail.forEach(f)
   }
 
-  def map[A >: T](mapFunction: T => A): LinkList[A] = {
+  def map[A](mapFunction: T => A): LinkList[A] = {
     @tailrec
     def helper(remainder: LinkList[T] = this, acc: LinkList[A] = EmptyLink): LinkList[A] = {
       if (remainder.isEmpty) {
@@ -208,7 +230,7 @@ case class Link[T](head: T, tail: LinkList[T]) extends LinkList[T] {
     helper()
   }
 
-  def flatMap[A >: T](flatMapFunction: T => LinkList[A]): LinkList[A] = {
+  def flatMap[A](flatMapFunction: T => LinkList[A]): LinkList[A] = {
     @tailrec
     def helper(remainder: LinkList[T] = this, acc: LinkList[A] = EmptyLink): LinkList[A] = {
       if (remainder.isEmpty) {
