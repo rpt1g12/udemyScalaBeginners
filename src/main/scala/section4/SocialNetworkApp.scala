@@ -22,8 +22,8 @@ object SocialNetworkApp extends App {
 
   println(socialNetwork.unfriend("Guille", "Marta"))
 
-  println(socialNetwork.connectionCheck("Rafa", "Marta"))
-  println(socialNetwork.unfriend("Guille", "Marta").connectionCheck("Rafa", "Marta"))
+  println(socialNetwork.connectionCheck("Hannah", "Marta"))
+  println(socialNetwork.unfriend("Guille", "Marta").connectionCheck("Hannah", "Marta"))
 
   println(socialNetwork.friendsCount("Rafa"))
   println(socialNetwork.mostSociable)

@@ -1,6 +1,8 @@
 package rpt.udemy
 package section4
 
+import scala.annotation.tailrec
+
 case class SocialNetwork(graph: Map[String, Set[String]] = Map()) {
 
   def add(person: String): SocialNetwork = {
@@ -42,17 +44,33 @@ case class SocialNetwork(graph: Map[String, Set[String]] = Map()) {
   def unsociablePeopleCount: Int = graph.count(_._2.isEmpty)
 
   def connectionCheck(personA: String, personB: String): Boolean = {
-    if (friendsOf(personA).contains(personB) || friendsOf(personB).contains(personA)) {
-      true
-    } else {
-      val friendsA = friendsOf(personA)
-      val friendsB = friendsOf(personB)
-      if (friendsA.intersect(friendsB).nonEmpty) {
-        true
+    @tailrec
+    def helper(personA: String, personB: String, status: Boolean = false, visited: Set[(String, String)] = Set()): Boolean = {
+      if (status) {
+        status
       } else {
-        friendsA.flatMap(friendA => friendsB.map(friendB => connectionCheck(friendA, friendB))).contains(true)
+        val friendsA = friendsOf(personA)
+        val friendsB = friendsOf(personB)
+        if ((friendsA + personA).intersect(friendsB + personB).nonEmpty) {
+          true
+        } else {
+          val newCandidate = friendsA.flatMap(
+            friendA => friendsB.map(
+              friendB => (friendA, friendB)
+            ).filterNot(pair => visited.contains(pair) || visited.contains(pair.swap))
+          ).headOption
+          if (newCandidate.isEmpty){
+            false
+          } else {
+            val (pA, pB) = newCandidate.get
+            val visitedPair = (personA,personB)
+            helper(pA, pB, status, visited + visitedPair)
+          }
+        }
       }
     }
+
+    helper(personA, personB)
   }
 
   override def toString: String = {
